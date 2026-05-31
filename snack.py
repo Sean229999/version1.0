@@ -1,4 +1,5 @@
 import pygame
+from pygame import mixer
 import os
 import random
 
@@ -9,17 +10,32 @@ SIZE = 25
 
 pygame.init()
 
+
 fontsPath = os.path.join("fonts","COMIC.TTF")
 
+mixer.music.load("headshot.mp3")
+mixer.music.set_volume(0.7)
+
 font = pygame.font.Font(fontsPath,32)
+font2 = pygame.font.Font(fontsPath,18)
 start_text = font.render("Press ANY key to start! Or press ESC to exit",True,(255,255,0))
 start_textRect = start_text.get_rect()
 start_textRect.center = (WIDTH//2,HEIGHT//2)
 
-end_text = font.render("Press R to try again! Or Press ESC to exit",True,(255,255,0))
-end_textRect = end_text.get_rect()
-end_textRect.center = (WIDTH//2,HEIGHT//2)
 
+
+#draw score
+def drawScore(score):
+    score_text = font2.render("Score:"+str(score),True,(255,255,0))
+    score_rect = score_text.get_rect()
+    window.blit(score_text,score_rect)
+
+#draw end
+def drawEnd(score):
+    end_text = font.render("You finally got "+str(score)+" Score\n"+"Press R to try again! Or Press ESC to exit",True,(255,255,0))
+    end_textRect = end_text.get_rect()
+    end_textRect.center = (WIDTH//2,HEIGHT//2)
+    window.blit(end_text,end_textRect)
 
 # draw snack
 def drawSnack(snack):
@@ -29,8 +45,8 @@ def drawSnack(snack):
 #generate food position
 def generateFood():
     while True:
-        food_x = random.randrange(0,775,25)
-        food_y = random.randrange(0,575,25)
+        food_x = random.randrange(50,775,25)
+        food_y = random.randrange(50,575,25)
         for x,y in snack:
             if x == food_x and y == food_y:
                 continue
@@ -69,16 +85,16 @@ def updatPosition(snack,pos_x,pos_y):
 
 def moveDirection(event,dir_x,dir_y):
     if event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_w and dir_y != speed:
+        if (event.key == pygame.K_w or event.key == pygame.K_UP) and dir_y != speed:
             dir_y = -speed
             dir_x = 0
-        elif event.key == pygame.K_s and dir_y != -speed:
+        elif (event.key == pygame.K_s or event.key == pygame.K_DOWN) and dir_y != -speed:
             dir_y = speed
             dir_x = 0
-        elif event.key == pygame.K_a and dir_x != speed:
+        elif (event.key == pygame.K_a or event.key == pygame.K_LEFT) and dir_x != speed:
             dir_x = -speed
             dir_y = 0
-        elif event.key == pygame.K_d and dir_x != -speed:
+        elif (event.key == pygame.K_d or event.key == pygame.K_RIGHT) and dir_x != -speed:
             dir_x = speed
             dir_y = 0
 
@@ -97,7 +113,7 @@ def goBack():
 [400,300],
 [400,325],
 [400,350]
-],initX,initY,initDX,initDY
+],initX,initY,initDX,initDY,initScore
 
 
 speed = SIZE
@@ -119,6 +135,7 @@ dir_y = -speed
 
 # food initial position
 food_x,food_y = generateFood()
+score = 0
 
 
 initS = [
@@ -131,7 +148,7 @@ initX = pos_x
 initY = pos_y
 initDX = dir_x
 initDY = dir_y
-
+initScore = score
 
 
 window = pygame.display.set_mode((WIDTH,HEIGHT))
@@ -160,11 +177,14 @@ while running:
                 else:
                     game_state = "Playing"
             elif game_state == "Playing":
+                if event.key == pygame.K_ESCAPE:
+                    running = False                
                 dir_x,dir_y = moveDirection(event,dir_x,dir_y)
             elif game_state == "Over":
                 if event.key == pygame.K_ESCAPE:
                     running = False
                 elif event.key == pygame.K_r:
+                    snack,pos_x,pos_y,dir_x,dir_y,score = goBack()
                     game_state = "Playing"
 
 
@@ -175,15 +195,16 @@ while running:
 
         pos_x += dir_x
         pos_y += dir_y
-
+        drawScore(score)
         drawFood(food_x,food_y)
 
         if getFood(pos_x,pos_y,food_x,food_y):
+            score+=1
+            mixer.music.play()
             food_x,food_y = generateFood()    
         drawSnack(snack)
 
         if isOver(pos_x,pos_y,snack):
-            snack,pos_x,pos_y,dir_x,dir_y = goBack()
             food_x,food_y = generateFood()
             game_state = "Over"
 
@@ -191,7 +212,7 @@ while running:
         if game_state != "Over":
             updatPosition(snack,pos_x,pos_y)
     elif game_state == "Over":
-        window.blit(end_text,end_textRect)
+        drawEnd(score)
 
     pygame.display.flip()
 
