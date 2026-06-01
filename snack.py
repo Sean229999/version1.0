@@ -1,7 +1,21 @@
 import pygame
 from pygame import mixer
 import os
+import sys
 import random
+from pathlib import Path
+
+
+def resource_path(relative_path):
+    """获取资源的绝对路径，兼容 PyInstaller 打包后的环境"""
+    try:
+        # PyInstaller 创建临时文件夹，并将路径存储在 _MEIPASS 变量中
+        base_path = Path(sys._MEIPASS)
+    except Exception:
+        # 开发环境下使用当前目录
+        base_path = Path.cwd()
+    # 使用 / 运算符智能拼接路径，自动兼容 Windows 和 Linux/Mac
+    return str(base_path / relative_path)
 
 
 WIDTH = 800
@@ -11,9 +25,9 @@ SIZE = 25
 pygame.init()
 
 
-fontsPath = os.path.join("fonts","COMIC.TTF")
+fontsPath = resource_path("fonts/COMIC.TTF")
 
-mixer.music.load("headshot.mp3")
+mixer.music.load(resource_path("headshot.mp3"))
 mixer.music.set_volume(0.7)
 
 font = pygame.font.Font(fontsPath,32)
