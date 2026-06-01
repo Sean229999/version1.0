@@ -3,3 +3,4 @@
 # 忽略虚拟环境目录
 venv/
 .venv/
+build/
